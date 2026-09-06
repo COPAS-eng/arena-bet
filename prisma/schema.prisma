@@ -1,0 +1,239 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+  SUPPORT
+  SUPER_ADMIN
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAW
+  BET
+  WIN
+  BONUS
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum GameType {
+  CRASH
+  DOUBLE
+  MINES
+  SLOTS
+  ROULETTE
+  BLACKJACK
+}
+
+enum BetStatus {
+  ACTIVE
+  WON
+  LOST
+  CASHED_OUT
+  CANCELLED
+  PENDING
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String
+  role          UserRole  @default(USER)
+  emailVerified DateTime?
+  birthDate     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  isBlocked     Boolean   @default(false)
+
+  wallet        Wallet?
+  bets          Bet[]
+  transactions  Transaction[]
+  sessions      Session[]
+  gameSeeds     GameSeed[]
+  referralCode  String?   @unique
+  referredBy    String?
+  referrals     User[]    @relation("Referral")
+  referrer      User?     @relation("Referral", fields: [referredBy], references: [referralCode])
+
+  @@index([email])
+  @@index([username])
+}
+
+model Wallet {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  balance      Decimal  @default(0) @db.Decimal(18, 8)
+  bonusBalance Decimal  @default(0) @db.Decimal(18, 8)
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  userId        String
+  walletId      String
+  type          TransactionType
+  status        TransactionStatus @default(PENDING)
+  amount        Decimal           @db.Decimal(18, 8)
+  balanceBefore Decimal           @db.Decimal(18, 8)
+  balanceAfter  Decimal           @db.Decimal(18, 8)
+  description   String?
+  metadata      Json?
+  processedAt   DateTime?
+  createdAt     DateTime          @default(now())
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet        Wallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type, status])
+  @@index([createdAt])
+}
+
+model Bet {
+  id          String   @id @default(cuid())
+  userId      String
+  gameType    GameType
+  gameRoundId String?
+  amount      Decimal  @db.Decimal(18, 8)
+  currency    String   @default("BRL")
+  status      BetStatus @default(PENDING)
+  payout      Decimal? @db.Decimal(18, 8)
+  multiplier  Decimal? @db.Decimal(18, 8)
+  clientSeed  String?
+  serverSeed  String?
+  nonce       Int?
+  result      Json?
+  cashedOutAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([gameType, status])
+  @@index([createdAt])
+}
+
+model GameRound {
+  id             String   @id @default(cuid())
+  gameType       GameType
+  roundNumber    BigInt   @unique
+  serverSeed     String
+  serverSeedHash String
+  clientSeed     String?
+  nonce          Int      @default(0)
+  result         Json
+  startedAt      DateTime @default(now())
+  endedAt        DateTime?
+  isFinished     Boolean  @default(false)
+  @@index([gameType, roundNumber])
+}
+
+model GameSeed {
+  id         String   @id @default(cuid())
+  userId     String
+  gameType   GameType
+  clientSeed String
+  serverSeed String
+  nonce      Int      @default(0)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, gameType])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GameConfig {
+  id        String   @id @default(cuid())
+  gameType  GameType @unique
+  config    Json
+  houseEdge Float    @default(0.01)
+  minBet    Decimal  @db.Decimal(18, 8)
+  maxBet    Decimal  @db.Decimal(18, 8)
+  maxPayout Decimal  @db.Decimal(18, 8)
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+model Game {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  category  String
+  provider  String   @default("ARENA")
+  image     String
+  isActive  Boolean  @default(true)
+  isPopular Boolean  @default(false)
+  isNew     Boolean  @default(false)
+  rtp       Float    @default(96.5)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Promotion {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  image       String
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model SupportTicket {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String
+  subject   String
+  category  String
+  message   String
+  status    String   @default("open")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  oldData   Json?
+  newData   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
