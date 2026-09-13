@@ -6,8 +6,16 @@ import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/stores/appStore";
 import { ScrollReveal, StaggerContainer, StaggerItem } from "@/components/parallax/ParallaxSection";
 import { toast } from "sonner";
+import { FutebolIcon, BasqueteIcon, TenisIcon, VoleiIcon, Formula1Icon, EsportsIcon } from "@/components/ui/category";
 
-const sports = ["Futebol", "Basquete", "Tênis", "Vôlei", "Fórmula 1", "E-sports"];
+const sports = [
+  { name: "Futebol", icon: FutebolIcon },
+  { name: "Basquete", icon: BasqueteIcon },
+  { name: "Tênis", icon: TenisIcon },
+  { name: "Vôlei", icon: VoleiIcon },
+  { name: "Fórmula 1", icon: Formula1Icon },
+  { name: "E-sports", icon: EsportsIcon },
+];
 const filters = ["Ao vivo", "Hoje", "Amanhã", "Próximos eventos", "Favoritos"];
 
 const events = [
@@ -43,8 +51,9 @@ export default function EsportesPage() {
         <h3 className="font-bold text-sm mb-3">Esportes</h3>
         <div className="space-y-1">
           {sports.map((s) => (
-            <button key={s} onClick={() => setActiveSport(s)} className={`w-full text-left px-3 py-2 rounded-lg text-sm ${activeSport === s ? "bg-[#1c1c1c] text-white border border-[#272727]" : "text-zinc-400 hover:bg-[#141414] hover:text-white"}`}>
-              {s}
+            <button key={s.name} onClick={() => setActiveSport(s.name)} className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-3 ${activeSport === s.name ? "bg-[#1c1c1c] text-white border border-[#272727]" : "text-zinc-400 hover:bg-[#141414] hover:text-white"}`}>
+              <s.icon className="w-5 h-5" />
+              {s.name}
             </button>
           ))}
         </div>

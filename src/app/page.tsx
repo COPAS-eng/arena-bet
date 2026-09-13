@@ -15,13 +15,15 @@ const banners = [
   { title: "SUPER ODDS", subtitle: "Odds turbinadas nos grandes clássicos", cta: "APOSTAR", gradient: "from-emerald-600 via-teal-600 to-cyan-600", accent: "⚡" },
 ];
 
+import { FutebolIcon, BasqueteIcon, TenisIcon, Formula1Icon, CrashIcon } from "@/components/ui/category";
+
 const categories = [
-  { icon: "⚽", label: "Futebol", count: "128 eventos" },
-  { icon: "🏀", label: "Basquete", count: "42 eventos" },
-  { icon: "🎾", label: "Tênis", count: "36 eventos" },
-  { icon: "🏎", label: "Fórmula 1", count: "12 eventos" },
-  { icon: "🎰", label: "Cassino", count: "200+ jogos" },
-  { icon: "🔥", label: "Ao Vivo", count: "56 ao vivo" },
+  { icon: FutebolIcon, label: "Futebol", count: "128 eventos", href: "/esportes" },
+  { icon: BasqueteIcon, label: "Basquete", count: "42 eventos", href: "/esportes" },
+  { icon: TenisIcon, label: "Tênis", count: "36 eventos", href: "/esportes" },
+  { icon: Formula1Icon, label: "Fórmula 1", count: "12 eventos", href: "/esportes" },
+  { icon: CrashIcon, label: "Cassino", count: "200+ jogos", href: "/cassino" },
+  { icon: CrashIcon, label: "Ao Vivo", count: "56 ao vivo", href: "/ao-vivo" },
 ];
 
 const featured = [
@@ -115,9 +117,9 @@ export default function HomePage() {
       <StaggerContainer className="grid grid-cols-3 lg:grid-cols-6 gap-3">
         {categories.map((c) => (
           <StaggerItem key={c.label}>
-            <Link href={c.label === "Cassino" ? "/cassino" : c.label === "Ao Vivo" ? "/ao-vivo" : "/esportes"} className="group relative overflow-hidden rounded-xl border border-[#272727] bg-[#141414] p-4 hover:bg-[#1c1c1c] hover:border-[#333] transition text-center block">
+            <Link href={c.href} className="group relative overflow-hidden rounded-xl border border-[#272727] bg-[#141414] p-4 hover:bg-[#1c1c1c] hover:border-[#333] transition text-center block">
               <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition" />
-              <div className="relative text-2xl group-hover:scale-110 transition-transform duration-300">{c.icon}</div>
+              <c.icon className="relative mx-auto text-3xl group-hover:scale-110 transition-transform duration-300" />
               <div className="relative font-bold text-sm mt-2">{c.label}</div>
               <div className="relative text-xs text-zinc-500">{c.count}</div>
             </Link>
