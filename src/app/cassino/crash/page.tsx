@@ -32,7 +32,10 @@ export default function CrashPage() {
   const [roundSeed, setRoundSeed] = useState("");
   const intervalRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
+  const cashedOutRef = useRef(false);
   const preferReducedMotion = useReducedMotion();
+
+  useEffect(() => { cashedOutRef.current = cashedOut; }, [cashedOut]);
 
   const clearGameInterval = useCallback(() => {
     if (intervalRef.current !== null) {
@@ -68,6 +71,7 @@ export default function CrashPage() {
     setMultiplier(1.0);
     setIsBetting(true);
     setCashedOut(false);
+    cashedOutRef.current = false;
 
     setTimeout(() => {
       setIsBetting(false);
@@ -92,17 +96,18 @@ export default function CrashPage() {
           setMultiplier(cp);
           setIsPlaying(false);
           setHistory((h) => [Number(cp.toFixed(2)), ...h].slice(0, 20));
-          if (!cashedOut) {
+          if (!cashedOutRef.current) {
             toast.error(`Crash em ${cp.toFixed(2)}x — Você não retirou a tempo`);
           }
         }
       }, preferReducedMotion ? 200 : 50);
     }, 1500);
-  }, [isPlaying, isBetting, betAmount, cashedOut, clearGameInterval, preferReducedMotion]);
+  }, [isPlaying, isBetting, betAmount, clearGameInterval, preferReducedMotion]);
 
   const cashOut = useCallback(() => {
-    if (!isPlaying || cashedOut) return;
+    if (!isPlaying || cashedOutRef.current) return;
     setCashedOut(true);
+    cashedOutRef.current = true;
     clearGameInterval();
     setIsPlaying(false);
 
@@ -118,13 +123,14 @@ export default function CrashPage() {
     }));
     setHistory((h) => [multiplier, ...h].slice(0, 20));
     toast.success(`Retirou em ${multiplier.toFixed(2)}x — +${formatBRL(profit)}`);
-  }, [isPlaying, cashedOut, betAmount, multiplier, clearGameInterval]);
+  }, [isPlaying, betAmount, multiplier, clearGameInterval]);
 
   const crashed = isPlaying === false && isBetting === false && multiplier >= crashPoint - 0.001 && !cashedOut && history[0] === Number(crashPoint.toFixed(2));
 
   const handleBetAmountChange = (value: string) => {
     const num = Number(value);
-    if (!Number.isNaN(num) && num >= 1) setBetAmount(num);
+    if (Number.isFinite(num) && num >= 1 && num <= 100000) setBetAmount(Math.floor(num));
+    else if (value === "") setBetAmount(1);
   };
 
   const quickBet = (value: number) => setBetAmount(value);

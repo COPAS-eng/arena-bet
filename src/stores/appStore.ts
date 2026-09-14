@@ -1,6 +1,7 @@
 "use client";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { signIn as nextAuthSignIn, signOut as nextAuthSignOut } from "next-auth/react";
 
 export type BetItem = { id: string; event: string; market: string; odd: number };
 export type Transaction = { id: string; date: string; type: "DEPOSIT" | "WITHDRAW" | "BET" | "WIN" | "BONUS"; description: string; amount: number; status: string };
@@ -58,6 +59,22 @@ export const useAppStore = create<AppState>()(
       login: async (email, password) => {
         set({ loading: true });
         try {
+          // Tenta NextAuth primeiro (cria sessão JWT httpOnly)
+          const naRes: any = await nextAuthSignIn("credentials", { email, password, redirect: false });
+          if (naRes?.ok) {
+            // Busca perfil real do DB
+            const profileRes = await fetch("/api/user");
+            if (profileRes.ok) {
+              const data = await profileRes.json();
+              set({ isAuthenticated: true, user: { name: data.username, email: data.email, avatar: (data.username?.[0] ?? "U").toUpperCase() }, loading: false });
+              set({ balance: Number(data.balance) ?? 1000, bonusBalance: Number(data.bonusBalance) ?? 250 });
+            } else {
+              // fallback local se /api/user falhar
+              set({ isAuthenticated: true, user: { name: email.split("@")[0], email, avatar: email[0]?.toUpperCase() ?? "U" }, loading: false });
+            }
+            return;
+          }
+          // Fallback para endpoint custom DEMO (quando NextAuth não está configurado ou DB offline - ex: Vercel sem DATABASE_URL)
           const res = await fetch("/api/auth/signin", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -66,18 +83,19 @@ export const useAppStore = create<AppState>()(
           if (res.ok) {
             const data = await res.json();
             set({ isAuthenticated: true, user: { name: data.username, email: data.email, avatar: data.username[0]?.toUpperCase() ?? "U" }, loading: false });
-            await get().fetchProfile();
+            await get().fetchProfile().catch(() => {});
           } else {
             set({ loading: false });
             throw new Error("Login failed");
           }
-        } catch {
+        } catch (e) {
           set({ loading: false });
           throw new Error("Login failed");
         }
       },
       logout: async () => {
-        await fetch("/api/auth/signout", { method: "POST" });
+        try { await nextAuthSignOut({ redirect: false }); } catch {}
+        try { await fetch("/api/auth/signout", { method: "POST" }); } catch {}
         set({ isAuthenticated: false, user: null, betItems: [] });
       },
 

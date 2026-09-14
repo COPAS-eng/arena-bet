@@ -7,8 +7,11 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     if (!(session?.user as any)?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const userId = (session!.user as any).id as string;
-    const { type, amount } = await req.json();
-    if (!amount || amount <= 0) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
+    const body = await req.json();
+    const type = body.type as string;
+    const amount = Number(body.amount);
+    if (!['DEPOSIT', 'WITHDRAW'].includes(type)) return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+    if (!Number.isFinite(amount) || amount <= 0) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
     if (amount > 100000) return NextResponse.json({ error: 'Max R$ 100,000' }, { status: 400 });
     const wallet = await prisma.wallet.findUnique({ where: { userId } });
     if (!wallet) return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });

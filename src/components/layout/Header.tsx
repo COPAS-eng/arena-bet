@@ -47,10 +47,11 @@ export function Header({ onMenuToggle, sidebarOpen }: { onMenuToggle: () => void
   const handleUserMenuToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowUserMenu(!showUserMenu);
+    setShowNotif(false);
   };
 
   useEffect(() => {
-    const handleClickOutside = () => setShowUserMenu(false);
+    const handleClickOutside = () => { setShowUserMenu(false); setShowNotif(false); };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
@@ -176,7 +177,7 @@ export function Header({ onMenuToggle, sidebarOpen }: { onMenuToggle: () => void
               className="relative"
             >
               <motion.button
-                onClick={handleUserMenuToggle}
+                onClick={(e) => { e.stopPropagation(); setShowNotif(!showNotif); setShowUserMenu(false); }}
                 className="relative p-2.5 rounded-full bg-[#141414] border border-[#272727] hover:bg-[#1c1c1c]"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
