@@ -57,7 +57,7 @@ export default function CarteiraPage() {
               <p className="text-xl font-black">{formatBRL(depositAmount)}</p>
               <p className="text-xs text-zinc-500">PIX DEMO • Aprovação instantânea</p>
             </div>
-            <Button className="w-full" size="lg" onClick={() => { deposit(depositAmount); toast.success(`Depósito DEMO de ${formatBRL(depositAmount)} creditado!`); }}>CONFIRMAR DEPÓSITO DEMO</Button>
+            <Button className="w-full" size="lg" onClick={async () => { const res = await deposit(depositAmount); if (res.success) toast.success(`Depósito DEMO de ${formatBRL(depositAmount)} creditado!`); else toast.error(res.error || "Erro no depósito"); }}>CONFIRMAR DEPÓSITO DEMO</Button>
           </CardContent>
         </Card></ScrollReveal>
       ) : (
@@ -75,10 +75,10 @@ export default function CarteiraPage() {
                 <option>Transferência DEMO</option>
               </select>
             </div>
-            <Button className="w-full" variant="secondary" size="lg" onClick={() => {
-              const ok = withdraw(withdrawAmount);
-              if (ok) toast.success(`Saque DEMO de ${formatBRL(withdrawAmount)} solicitado!`);
-              else toast.error("Saldo insuficiente");
+            <Button className="w-full" variant="secondary" size="lg" onClick={async () => {
+              const res = await withdraw(withdrawAmount);
+              if (res.success) toast.success(`Saque DEMO de ${formatBRL(withdrawAmount)} solicitado!`);
+              else toast.error(res.error || "Saldo insuficiente");
             }}>SOLICITAR SAQUE DEMO</Button>
             <p className="text-xs text-zinc-500 text-center">Não armazenamos dados bancários reais na versão demo.</p>
           </CardContent>

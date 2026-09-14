@@ -38,10 +38,19 @@ export default function CadastroPage() {
 
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 900));
-      login(form.email, form.name);
-      toast.success("Conta criada (DEMO)!");
-      router.push("/");
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, username: form.name, password: form.password }),
+      });
+      if (res.ok) {
+        await login(form.email, form.password);
+        toast.success("Conta criada!");
+        router.push("/");
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Erro ao criar conta");
+      }
     } catch {
       toast.error("Erro ao criar conta");
     } finally {

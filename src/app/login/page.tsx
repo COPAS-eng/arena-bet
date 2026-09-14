@@ -20,12 +20,11 @@ export default function LoginPage() {
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(email)) return toast.error("E-mail inválido");
-    if (password.length < 6) return toast.error("Senha deve ter 6+ caracteres");
+    if (password.length < 8) return toast.error("Senha deve ter 8+ caracteres");
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 800));
-      login(email, email.split("@")[0]);
-      toast.success("Login realizado (DEMO)!");
+      await login(email, password);
+      toast.success("Login realizado!");
       router.push("/");
     } catch {
       toast.error("Erro ao fazer login");
